@@ -32,10 +32,16 @@ func isApplePlatform(platform string) bool {
 	return contains(applePlatforms, platform)
 }
 
+func isJVMPlatform(platform string) bool {
+	return platform == "jvm"
+}
+
 var applePlatforms = []string{"ios", "iossimulator", "macos", "maccatalyst", "tvos", "tvossimulator"}
 
 func platformArchs(platform string) []string {
 	switch platform {
+	case "jvm":
+		return []string{"386", "amd64", "arm", "arm64"}
 	case "ios":
 		return []string{"arm64"}
 	case "iossimulator":
@@ -60,6 +66,8 @@ func isSupportedArch(platform, arch string) bool {
 // platformOS returns the correct GOOS value for platform.
 func platformOS(platform string) string {
 	switch platform {
+	case "jvm":
+		return runtime.GOOS
 	case "android":
 		return "android"
 	case "ios", "iossimulator":
@@ -79,6 +87,8 @@ func platformOS(platform string) string {
 
 func platformTags(platform string) []string {
 	switch platform {
+	case "jvm":
+		return nil
 	case "android":
 		return []string{"android"}
 	case "ios":

@@ -25,14 +25,14 @@ import (
 var cmdBind = &command{
 	run:   runBind,
 	Name:  "bind",
-	Usage: "[-target android|" + strings.Join(applePlatforms, "|") + "] [-bootclasspath <path>] [-classpath <path>] [-o output] [build flags] [package]",
-	Short: "build a library for Android and iOS",
+	Usage: "[-target android|jvm|" + strings.Join(applePlatforms, "|") + "] [-bootclasspath <path>] [-classpath <path>] [-desktop] [-desktoptargets <list>] [-desktopo <path>] [-o output] [build flags] [package]",
+	Short: "build a library for Android, iOS, or JVM desktop",
 	Long: `
 Bind generates language bindings for the package named by the import
 path, and compiles a library for the named target system.
 
 The -target flag takes either android (the default), or one or more
-comma-delimited Apple platforms (` + strings.Join(applePlatforms, ", ") + `).
+comma-delimited Apple platforms (` + strings.Join(applePlatforms, ", ") + `), or jvm.
 
 For -target android, the bind command produces an AAR (Android ARchive)
 file that archives the precompiled Java API stub classes, the compiled
@@ -63,6 +63,14 @@ For -target android, the -bootclasspath and -classpath flags are used to
 control the bootstrap classpath and the classpath for Go wrappers to Java
 classes.
 
+For -target android, the -desktop flag additionally builds a desktop-friendly
+JAR containing generated Java classes and per-target native shared libraries.
+Desktop targets default to the current host with -desktoptargets=host and can
+be extended with values like linux/amd64,darwin/arm64,windows/amd64.
+
+For -target jvm, gomobile bind only builds the desktop-friendly JAR
+and does not generate an Android AAR.
+
 The -v flag provides verbose output, including the list of packages built.
 
 The build flags -a, -n, -x, -gcflags, -ldflags, -tags, -trimpath, and -work
@@ -71,18 +79,40 @@ are shared with the build command. For documentation, see 'go help build'.
 }
 
 func runBind(cmd *command) error {
-	cleanup, err := buildEnvInit()
-	if err != nil {
-		return err
-	}
-	defer cleanup()
-
-	args := cmd.flag.Args()
-
 	targets, err := parseBuildTarget(buildTarget)
 	if err != nil {
 		return fmt.Errorf(`invalid -target=%q: %v`, buildTarget, err)
 	}
+	if isJVMPlatform(targets[0].platform) {
+		cleanupFn := func() {
+			if buildWork {
+				fmt.Printf("WORK=%s\n", tmpdir)
+				return
+			}
+			removeAll(tmpdir)
+		}
+		if buildN {
+			tmpdir = "$WORK"
+			cleanupFn = func() {}
+		} else {
+			tmpdir, err = os.MkdirTemp("", "gomobile-work-")
+			if err != nil {
+				return err
+			}
+		}
+		if buildX {
+			fmt.Fprintln(xout, "WORK="+tmpdir)
+		}
+		defer cleanupFn()
+	} else {
+		cleanup, err := buildEnvInit()
+		if err != nil {
+			return err
+		}
+		defer cleanup()
+	}
+
+	args := cmd.flag.Args()
 
 	if isAndroidPlatform(targets[0].platform) {
 		if bindPrefix != "" {
@@ -91,9 +121,31 @@ func runBind(cmd *command) error {
 		if _, err := ndkRoot(targets[0]); err != nil {
 			return err
 		}
+	} else if isJVMPlatform(targets[0].platform) {
+		if bindPrefix != "" {
+			return fmt.Errorf("-prefix is supported only for Apple targets")
+		}
+		if bindBootClasspath != "" {
+			return fmt.Errorf("-bootclasspath is supported only for android target")
+		}
+		if bindDesktop {
+			return fmt.Errorf("-desktop is not needed for -target=jvm")
+		}
 	} else {
 		if bindJavaPkg != "" {
-			return fmt.Errorf("-javapkg is supported only for android target")
+			return fmt.Errorf("-javapkg is supported only for android and jvm targets")
+		}
+		if bindDesktopO != "" {
+			return fmt.Errorf("-desktopo is supported only for android and jvm targets")
+		}
+		if bindDesktopTargets != "host" {
+			return fmt.Errorf("-desktoptargets is supported only for android and jvm targets")
+		}
+		if bindDesktop {
+			return fmt.Errorf("-desktop is supported only for android target")
+		}
+		if bindClasspath != "" {
+			return fmt.Errorf("-classpath is supported only for android and jvm targets")
 		}
 	}
 
@@ -128,6 +180,8 @@ func runBind(cmd *command) error {
 	switch {
 	case isAndroidPlatform(targets[0].platform):
 		return goAndroidBind(bindLibName, gobind, pkgs, targets)
+	case isJVMPlatform(targets[0].platform):
+		return goDesktopBind(bindLibName, gobind, pkgs, true)
 	case isApplePlatform(targets[0].platform):
 		if !xcodeAvailable() {
 			return fmt.Errorf("-target=%q requires Xcode", buildTarget)
@@ -139,22 +193,28 @@ func runBind(cmd *command) error {
 }
 
 var (
-	bindPrefix        string // -prefix
-	bindJavaPkg       string // -javapkg
-	bindClasspath     string // -classpath
-	bindBootClasspath string // -bootclasspath
-	bindLibName       string // -libname
+	bindPrefix         string // -prefix
+	bindJavaPkg        string // -javapkg
+	bindClasspath      string // -classpath
+	bindBootClasspath  string // -bootclasspath
+	bindLibName        string // -libname
+	bindDesktop        bool   // -desktop
+	bindDesktopTargets string // -desktoptargets
+	bindDesktopO       string // -desktopo
 )
 
 func init() {
 	// bind command specific commands.
 	cmdBind.flag.StringVar(&bindJavaPkg, "javapkg", "",
-		"specifies custom Java package path prefix. Valid only with -target=android.")
+		"specifies custom Java package path prefix. Valid only with -target=android or -target=jvm.")
 	cmdBind.flag.StringVar(&bindPrefix, "prefix", "",
 		"custom Objective-C name prefix. Valid only with -target=ios.")
-	cmdBind.flag.StringVar(&bindClasspath, "classpath", "", "The classpath for imported Java classes. Valid only with -target=android.")
+	cmdBind.flag.StringVar(&bindClasspath, "classpath", "", "The classpath for imported Java classes. Valid only with -target=android or -target=jvm.")
 	cmdBind.flag.StringVar(&bindBootClasspath, "bootclasspath", "", "The bootstrap classpath for imported Java classes. Valid only with -target=android.")
-	cmdBind.flag.StringVar(&bindLibName, "libname", "gojni", "The name of the generated shared library. Valid only with -target=android.")
+	cmdBind.flag.StringVar(&bindLibName, "libname", "gojni", "The name of the generated shared library. Valid with -target=android and -target=jvm.")
+	cmdBind.flag.BoolVar(&bindDesktop, "desktop", false, "Also build a desktop JAR with Java classes and native shared libraries. Valid only with -target=android.")
+	cmdBind.flag.StringVar(&bindDesktopTargets, "desktoptargets", "host", "Comma-delimited desktop targets. Values: host, linux[/arch], darwin[/arch], windows[/arch].")
+	cmdBind.flag.StringVar(&bindDesktopO, "desktopo", "", "Output path for the desktop JAR.")
 }
 
 func bootClasspath() (string, error) {

@@ -25,6 +25,20 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+func javaRuntimeSuffix() string {
+	if *javaRuntime == "jvm" {
+		return "jvm"
+	}
+	return "android"
+}
+
+func javaSupportSeqFile() string {
+	if *javaRuntime == "jvm" {
+		return "Seq_jvm.java"
+	}
+	return "Seq.java"
+}
+
 func genPkg(lang string, p *types.Package, astFiles []*ast.File, allPkg []*types.Package, classes []*java.Class, otypes []*objc.Named, libName string) {
 	fname := defaultFileName(lang, p)
 	conf := &bind.GeneratorConfig{
@@ -69,12 +83,12 @@ func genPkg(lang string, p *types.Package, astFiles []*ast.File, allPkg []*types
 			closer()
 		}
 		buf.Reset()
-		w, closer = writer(filepath.Join("src", "gobind", pname+"_android.c"))
+		w, closer = writer(filepath.Join("src", "gobind", pname+"_"+javaRuntimeSuffix()+".c"))
 		processErr(g.GenC())
 		io.Copy(w, &buf)
 		closer()
 		buf.Reset()
-		w, closer = writer(filepath.Join("src", "gobind", pname+"_android.h"))
+		w, closer = writer(filepath.Join("src", "gobind", pname+"_"+javaRuntimeSuffix()+".h"))
 		processErr(g.GenH())
 		io.Copy(w, &buf)
 		closer()
@@ -86,14 +100,14 @@ func genPkg(lang string, p *types.Package, astFiles []*ast.File, allPkg []*types
 				return
 			}
 			repo := filepath.Clean(filepath.Join(dir, "..")) // github.com/sagernet/gomobile directory.
-			for _, javaFile := range []string{"Seq.java"} {
+			for _, javaFile := range []string{javaSupportSeqFile()} {
 				src := filepath.Join(repo, "bind/java/"+javaFile)
 				srcContent, err := os.ReadFile(src)
 				if err != nil {
 					errorf("failed to open Java support file: %v", err)
 				}
 				srcContent = []byte(strings.ReplaceAll(string(srcContent), "gojni", libName))
-				w, closer := writer(filepath.Join("java", "go", javaFile))
+				w, closer := writer(filepath.Join("java", "go", "Seq.java"))
 				defer closer()
 				if _, err := io.Copy(w, bytes.NewReader(srcContent)); err != nil {
 					errorf("failed to copy Java support file: %v", err)
@@ -110,9 +124,10 @@ func genPkg(lang string, p *types.Package, astFiles []*ast.File, allPkg []*types
 				errorf("unable to import bind/java: %v", err)
 				return
 			}
-			copyFile(filepath.Join("src", "gobind", "seq_android.c"), filepath.Join(javaDir, "seq_android.c.support"))
-			copyFile(filepath.Join("src", "gobind", "seq_android.go"), filepath.Join(javaDir, "seq_android.go.support"))
-			copyFile(filepath.Join("src", "gobind", "seq_android.h"), filepath.Join(javaDir, "seq_android.h"))
+			suffix := javaRuntimeSuffix()
+			copyFile(filepath.Join("src", "gobind", "seq_"+suffix+".c"), filepath.Join(javaDir, "seq_"+suffix+".c.support"))
+			copyFile(filepath.Join("src", "gobind", "seq_"+suffix+".go"), filepath.Join(javaDir, "seq_"+suffix+".go.support"))
+			copyFile(filepath.Join("src", "gobind", "seq_"+suffix+".h"), filepath.Join(javaDir, "seq_"+suffix+".h"))
 		}
 	case "go":
 		w, closer := writer(filepath.Join("src", "gobind", fname))
@@ -132,7 +147,11 @@ func genPkg(lang string, p *types.Package, astFiles []*ast.File, allPkg []*types
 			errorf("unable to import bind: %v", err)
 			return
 		}
-		copyFile(filepath.Join("src", "gobind", "seq.go"), filepath.Join(dir, "seq.go.support"))
+		seqSupport := "seq.go.support"
+		if *javaRuntime == "jvm" {
+			seqSupport = "seq_jvm.go.support"
+		}
+		copyFile(filepath.Join("src", "gobind", "seq.go"), filepath.Join(dir, seqSupport))
 	case "objc":
 		g := &bind.ObjcGen{
 			Generator: generator,
@@ -176,6 +195,9 @@ func genPkgH(w io.Writer, pname string) {
 
 #ifdef __GOBIND_ANDROID__
 #include "%[1]s_android.h"
+#endif
+#ifdef __GOBIND_JVM__
+#include "%[1]s_jvm.h"
 #endif
 #ifdef __GOBIND_DARWIN__
 #include "%[1]s_darwin.h"
@@ -275,7 +297,7 @@ func genJavaPackages(dir string, classes []*java.Class, embedders []importers.St
 	}
 	buf.Reset()
 	cg.GenGo()
-	if err := ioutil.WriteFile(filepath.Join(goBase, "classes_android.go"), buf.Bytes(), 0600); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(goBase, "classes_"+javaRuntimeSuffix()+".go"), buf.Bytes(), 0600); err != nil {
 		return err
 	}
 	buf.Reset()
@@ -285,7 +307,7 @@ func genJavaPackages(dir string, classes []*java.Class, embedders []importers.St
 	}
 	buf.Reset()
 	cg.GenC()
-	if err := ioutil.WriteFile(filepath.Join(goBase, "classes_android.c"), buf.Bytes(), 0600); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(goBase, "classes_"+javaRuntimeSuffix()+".c"), buf.Bytes(), 0600); err != nil {
 		return err
 	}
 	return nil

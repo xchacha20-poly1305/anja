@@ -167,6 +167,8 @@ func runBuildImpl(cmd *command) (*packages.Package, error) {
 		if err != nil {
 			return nil, err
 		}
+	default:
+		return nil, fmt.Errorf(`invalid -target=%q`, buildTarget)
 	}
 
 	if !nmpkgs["github.com/sagernet/gomobile/app"] {
@@ -413,7 +415,7 @@ func parseBuildTarget(buildTarget string) ([]targetInfo, error) {
 		}
 	}
 
-	var isAndroid, isApple bool
+	var isAndroid, isApple, isJVM bool
 	for _, target := range strings.Split(buildTarget, ",") {
 		tuple := strings.SplitN(target, "/", 2)
 		platform := tuple[0]
@@ -423,11 +425,13 @@ func parseBuildTarget(buildTarget string) ([]targetInfo, error) {
 			isAndroid = true
 		} else if isApplePlatform(platform) {
 			isApple = true
+		} else if isJVMPlatform(platform) {
+			isJVM = true
 		} else {
 			return nil, fmt.Errorf("unsupported platform: %q", platform)
 		}
-		if isAndroid && isApple {
-			return nil, fmt.Errorf(`cannot mix android and Apple platforms`)
+		if (isAndroid && isApple) || (isAndroid && isJVM) || (isApple && isJVM) {
+			return nil, fmt.Errorf(`cannot mix android, Apple, and jvm platforms`)
 		}
 
 		if hasArch {
