@@ -27,6 +27,7 @@ var (
 	lang          = flag.String("lang", "", "target languages for bindings, either java, go, or objc. If empty, all languages are generated.")
 	outdir        = flag.String("outdir", "", "result will be written to the directory instead of stdout.")
 	javaPkg       = flag.String("javapkg", "", "custom Java package path prefix. Valid only with -lang=java.")
+	javaRuntime   = flag.String("javaruntime", "android", "Java runtime support variant: android or jvm. Valid only with -lang=java.")
 	libname       = flag.String("libname", "gojni", "custom library name. Valid only with -lang=java.")
 	prefix        = flag.String("prefix", "", "custom Objective-C name prefix. Valid only with -lang=objc.")
 	bootclasspath = flag.String("bootclasspath", "", "Java bootstrap classpath.")
@@ -51,6 +52,11 @@ func run() {
 		langs = strings.Split(*lang, ",")
 	} else {
 		langs = []string{"go", "java", "objc"}
+	}
+	switch *javaRuntime {
+	case "android", "jvm":
+	default:
+		log.Fatalf("unsupported -javaruntime value %q: want android or jvm", *javaRuntime)
 	}
 
 	// We need to give appropriate environment variables like CC or CXX so that the returned packages no longer have errors.

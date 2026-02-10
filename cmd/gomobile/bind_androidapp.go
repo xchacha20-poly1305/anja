@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/sagernet/gomobile/internal/sdkpath"
@@ -28,6 +29,7 @@ func goAndroidBind(libName string, gobind string, pkgs []*packages.Package, targ
 	cmd := exec.Command(
 		gobind,
 		"-lang=go,java",
+		"-javaruntime=android",
 		"-outdir="+tmpdir,
 	)
 	cmd.Env = append(cmd.Env, "GOOS=android")
@@ -72,7 +74,13 @@ func goAndroidBind(libName string, gobind string, pkgs []*packages.Package, targ
 	if err := buildAAR(libName, jsrc, androidDir, pkgs, targets); err != nil {
 		return err
 	}
-	return buildSrcJar(jsrc)
+	if err := buildSrcJar(jsrc); err != nil {
+		return err
+	}
+	if bindDesktop {
+		return goDesktopBind(libName, gobind, pkgs, false)
+	}
+	return nil
 }
 
 func buildSrcJar(src string) error {
@@ -310,6 +318,10 @@ func buildJar(w io.Writer, srcDir string) error {
 }
 
 func writeJar(w io.Writer, dir string) error {
+	return writeJarWithFiles(w, dir, nil)
+}
+
+func writeJarWithFiles(w io.Writer, dir string, extraFiles map[string]string) error {
 	if buildN {
 		return nil
 	}
@@ -347,6 +359,31 @@ func writeJar(w io.Writer, dir string) error {
 	})
 	if err != nil {
 		return err
+	}
+	if len(extraFiles) > 0 {
+		var extraNames []string
+		for name := range extraFiles {
+			extraNames = append(extraNames, name)
+		}
+		sort.Strings(extraNames)
+		for _, name := range extraNames {
+			out, err := jarwcreate(name)
+			if err != nil {
+				return err
+			}
+			in, err := os.Open(extraFiles[name])
+			if err != nil {
+				return err
+			}
+			_, copyErr := io.Copy(out, in)
+			closeErr := in.Close()
+			if copyErr != nil {
+				return copyErr
+			}
+			if closeErr != nil {
+				return closeErr
+			}
+		}
 	}
 	return jarw.Close()
 }
