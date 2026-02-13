@@ -4,5 +4,5 @@
 
 // Package java implements the Java language bindings.
 //
-// See the design document (http://golang.org/s/gobind).
+// See the design document (http://golang.org/s/anjb).
 package java

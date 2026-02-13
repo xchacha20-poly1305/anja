@@ -15,19 +15,19 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sagernet/gomobile/internal/sdkpath"
+	"github.com/xchacha20-poly1305/anja/internal/sdkpath"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/tools/go/packages"
 )
 
-func goAndroidBind(libName string, gobind string, pkgs []*packages.Package, targets []targetInfo) error {
+func goAndroidBind(libName string, anjb string, pkgs []*packages.Package, targets []targetInfo) error {
 	if _, err := sdkpath.AndroidHome(); err != nil {
 		return fmt.Errorf("this command requires the Android SDK to be installed: %w", err)
 	}
 
-	// Run gobind to generate the bindings
+	// Run anjb to generate the bindings
 	cmd := exec.Command(
-		gobind,
+		anjb,
 		"-lang=go,java",
 		"-javaruntime=android",
 		"-outdir="+tmpdir,
@@ -78,7 +78,7 @@ func goAndroidBind(libName string, gobind string, pkgs []*packages.Package, targ
 		return err
 	}
 	if bindDesktop {
-		return goDesktopBind(libName, gobind, pkgs, false)
+		return goDesktopBind(libName, anjb, pkgs, false)
 	}
 	return nil
 }
@@ -404,7 +404,7 @@ func buildAndroidSO(libName string, outputDir string, arch string) error {
 		return err
 	}
 
-	srcDir := filepath.Join(tmpdir, "src", "gobind")
+	srcDir := filepath.Join(tmpdir, "src", "anjb")
 
 	if modulesUsed {
 		newSrcDir, _ := filepath.Abs(filepath.Join(".", "build", arch, "lib"+libName))

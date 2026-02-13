@@ -11,7 +11,7 @@
 
 //  * Objective-C implementation of a Go interface type
 //
-//  For an interface testpkg.I, gobind defines a protocol GoSeqTestpkgI.
+//  For an interface testpkg.I, anjb defines a protocol GoSeqTestpkgI.
 //  Reference tracker (tracker) maintains two maps:
 //     1) _refs: objective-C object pointer -> a refnum (starting from 42).
 //     2) _objs: refnum -> RefCounter.

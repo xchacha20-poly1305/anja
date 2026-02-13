@@ -17,9 +17,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sagernet/gomobile/internal/importers"
-	"github.com/sagernet/gomobile/internal/importers/java"
-	"github.com/sagernet/gomobile/internal/importers/objc"
+	"github.com/xchacha20-poly1305/anja/internal/importers"
+	"github.com/xchacha20-poly1305/anja/internal/importers/java"
+	"github.com/xchacha20-poly1305/anja/internal/importers/objc"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -35,7 +35,7 @@ var (
 	tags          = flag.String("tags", "", "build tags.")
 )
 
-var usage = `The Gobind tool generates Java language bindings for Go.
+var usage = `The Anjb tool generates Java language bindings for Go.
 
 For usage details, see doc.go.`
 
@@ -61,7 +61,7 @@ func run() {
 
 	// We need to give appropriate environment variables like CC or CXX so that the returned packages no longer have errors.
 	// However, getting such environment variables is difficult or impossible so far.
-	// Gomobile can obtain such environment variables in env.go, but this logic assumes some condiitons gobind doesn't assume.
+	// Anja can obtain such environment variables in env.go, but this logic assumes some condiitons anjb doesn't assume.
 	cfg := &packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles |
 			packages.NeedImports | packages.NeedDeps |
@@ -109,7 +109,7 @@ func run() {
 	if len(classes) > 0 || len(otypes) > 0 {
 		srcDir := *outdir
 		if srcDir == "" {
-			srcDir, err = ioutil.TempDir(os.TempDir(), "gobind-")
+			srcDir, err = ioutil.TempDir(os.TempDir(), "anjb-")
 			if err != nil {
 				log.Fatal(err)
 			}

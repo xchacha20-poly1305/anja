@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // C support functions for bindings. This file is copied into the
-// generated gomobile_bind package and compiled along with the
+// generated anja_bind package and compiled along with the
 // generated binding files.
 
 #include <android/log.h>

@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/sagernet/gomobile/internal/sdkpath"
+	"github.com/xchacha20-poly1305/anja/internal/sdkpath"
 )
 
 // MinSDK is the targeted sdk version for support by package binres.
