@@ -47,9 +47,41 @@ Example:
 ```bash
 gomobile bind -target=jvm \
   -desktoptargets host,linux/amd64,darwin/arm64,windows/amd64 \
+  -jniinclude /path/to/jni-headers \
   -desktopo mylib-desktop.jar \
   ./your/pkg
 ```
+
+### Custom JNI headers
+
+Use `-jniinclude` when the JNI headers for desktop builds should come from a specific directory instead of the default `JAVA_HOME` lookup.
+
+Directory layout:
+
+```bash
+/path/to/jni-headers/
+├── jni.h
+├── darwin
+│   └── jni_md.h
+├── linux
+│   └── jni_md.h
+└── win32
+    └── jni_md.h
+```
+
+Example:
+
+```bash
+gomobile bind -target=jvm \
+  -jniinclude /path/to/jni-headers \
+  ./your/pkg
+```
+
+Lookup order for each desktop target:
+
+- First check `<jniinclude>/jni.h` and `<jniinclude>/<os>/jni_md.h`.
+- `os` maps to `linux`, `darwin`, or `win32`.
+- If the configured directory does not contain matching JNI headers, fall back to the existing `JAVA_HOME` / `javac` detection.
 
 Supported target syntax:
 
@@ -67,4 +99,5 @@ Supported desktop arches by platform:
 ## Notes
 
 - Desktop builds require a full JDK (JNI headers), usually via `JAVA_HOME`.
+- Use `-jniinclude` to point desktop builds at a custom JNI headers directory. `gomobile` checks `<root>/<os>/` first and falls back to the existing `JAVA_HOME` detection when the platform headers are not present.
 - Cross-platform desktop builds require matching C cross-compilers/toolchains installed.

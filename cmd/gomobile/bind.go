@@ -25,7 +25,7 @@ import (
 var cmdBind = &command{
 	run:   runBind,
 	Name:  "bind",
-	Usage: "[-target android|jvm|" + strings.Join(applePlatforms, "|") + "] [-bootclasspath <path>] [-classpath <path>] [-desktop] [-desktoptargets <list>] [-desktopo <path>] [-o output] [build flags] [package]",
+	Usage: "[-target android|jvm|" + strings.Join(applePlatforms, "|") + "] [-bootclasspath <path>] [-classpath <path>] [-desktop] [-desktoptargets <list>] [-desktopo <path>] [-jniinclude <dir>] [-o output] [build flags] [package]",
 	Short: "build a library for Android, iOS, or JVM desktop",
 	Long: `
 Bind generates language bindings for the package named by the import
@@ -141,6 +141,9 @@ func runBind(cmd *command) error {
 		if bindDesktopTargets != "host" {
 			return fmt.Errorf("-desktoptargets is supported only for android and jvm targets")
 		}
+		if len(bindJNIInclude) > 0 {
+			return fmt.Errorf("-jniinclude is supported only for android and jvm targets")
+		}
 		if bindDesktop {
 			return fmt.Errorf("-desktop is supported only for android target")
 		}
@@ -201,6 +204,7 @@ var (
 	bindDesktop        bool   // -desktop
 	bindDesktopTargets string // -desktoptargets
 	bindDesktopO       string // -desktopo
+	bindJNIInclude     string // -jniinclude
 )
 
 func init() {
@@ -215,6 +219,7 @@ func init() {
 	cmdBind.flag.BoolVar(&bindDesktop, "desktop", false, "Also build a desktop JAR with Java classes and native shared libraries. Valid only with -target=android.")
 	cmdBind.flag.StringVar(&bindDesktopTargets, "desktoptargets", "host", "Comma-delimited desktop targets. Values: host, linux[/arch], darwin[/arch], windows[/arch].")
 	cmdBind.flag.StringVar(&bindDesktopO, "desktopo", "", "Output path for the desktop JAR.")
+	cmdBind.flag.StringVar(&bindJNIInclude, "jniinclude", "", "Custom desktop JNI directory root. Checks <dir>/<os>/ for JNI headers before falling back to JAVA_HOME detection.")
 }
 
 func bootClasspath() (string, error) {

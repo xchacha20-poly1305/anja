@@ -167,7 +167,7 @@ func runDesktopGobind(gobind string, libName string, pkgs []*packages.Package, t
 }
 
 func buildDesktopSO(libName string, target desktopTarget, outDir string, outPath string) error {
-	jniCflags, err := desktopJNICFlags(target.goos)
+	jniCflags, err := desktopJNICFlags(target)
 	if err != nil {
 		return err
 	}
@@ -219,17 +219,22 @@ func buildDesktopSO(libName string, target desktopTarget, outDir string, outPath
 	)
 }
 
-func desktopJNICFlags(goos string) (string, error) {
-	var osIncludeDir string
-	switch goos {
-	case "linux":
-		osIncludeDir = "linux"
-	case "darwin":
-		osIncludeDir = "darwin"
-	case "windows":
-		osIncludeDir = "win32"
-	default:
-		return "", fmt.Errorf("unsupported desktop platform: %q", goos)
+func desktopJNICFlags(target desktopTarget) (string, error) {
+	osIncludeDir, err := desktopJNIPlatformIncludeDir(target.goos)
+	if err != nil {
+		return "", err
+	}
+
+	customIncludeDir, configured, err := configuredDesktopJNIIncludeDir(osIncludeDir)
+	if err != nil {
+		return "", err
+	}
+	if configured {
+		flags := "-I" + customIncludeDir + " -I" + filepath.Join(customIncludeDir, osIncludeDir)
+		if existing := os.Getenv("CGO_CFLAGS"); existing != "" {
+			flags = existing + " " + flags
+		}
+		return flags, nil
 	}
 
 	javaHome, err := findJavaHome(osIncludeDir)
@@ -244,6 +249,42 @@ func desktopJNICFlags(goos string) (string, error) {
 		flags = existing + " " + flags
 	}
 	return flags, nil
+}
+
+func desktopJNIPlatformIncludeDir(goos string) (string, error) {
+	switch goos {
+	case "linux":
+		return "linux", nil
+	case "darwin":
+		return "darwin", nil
+	case "windows":
+		return "win32", nil
+	default:
+		return "", fmt.Errorf("unsupported desktop platform: %q", goos)
+	}
+}
+
+func configuredDesktopJNIIncludeDir(osIncludeDir string) (string, bool, error) {
+	if bindJNIInclude == "" {
+		return "", false, nil
+	}
+
+	includeDir, err := desktopJNIIncludeDir(filepath.Clean(bindJNIInclude), osIncludeDir)
+	if err == nil {
+		return includeDir, true, nil
+	}
+	return "", false, nil
+}
+
+func desktopJNIIncludeDir(root string, osIncludeDir string) (string, error) {
+	includeDir := filepath.Clean(root)
+	if _, err := os.Stat(filepath.Join(includeDir, "jni.h")); err != nil {
+		return "", err
+	}
+	if _, err := os.Stat(filepath.Join(includeDir, osIncludeDir, "jni_md.h")); err != nil {
+		return "", err
+	}
+	return includeDir, nil
 }
 
 func findJavaHome(osIncludeDir string) (string, error) {
