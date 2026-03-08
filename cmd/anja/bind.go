@@ -17,7 +17,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/sagernet/gomobile/internal/sdkpath"
+	"github.com/xchacha20-poly1305/anja/internal/sdkpath"
 	"golang.org/x/mod/modfile"
 	"golang.org/x/tools/go/packages"
 )
@@ -55,7 +55,7 @@ instruction sets (arm, arm64, 386, amd64). A subset of instruction sets
 can be selected by specifying target type with the architecture name. E.g.,
 -target=android/arm,android/386.
 
-For Apple -target platforms, gomobile must be run on an OS X machine with
+For Apple -target platforms, anja must be run on an OS X machine with
 Xcode installed. The generated Objective-C types can be prefixed with the
 -prefix flag.
 
@@ -68,7 +68,7 @@ JAR containing generated Java classes and per-target native shared libraries.
 Desktop targets default to the current host with -desktoptargets=host and can
 be extended with values like linux/amd64,darwin/arm64,windows/amd64.
 
-For -target jvm, gomobile bind only builds the desktop-friendly JAR
+For -target jvm, anja bind only builds the desktop-friendly JAR
 and does not generate an Android AAR.
 
 The -v flag provides verbose output, including the list of packages built.
@@ -95,7 +95,7 @@ func runBind(cmd *command) error {
 			tmpdir = "$WORK"
 			cleanupFn = func() {}
 		} else {
-			tmpdir, err = os.MkdirTemp("", "gomobile-work-")
+			tmpdir, err = os.MkdirTemp("", "anja-work-")
 			if err != nil {
 				return err
 			}
@@ -152,14 +152,14 @@ func runBind(cmd *command) error {
 		}
 	}
 
-	var gobind string
+	var anjb string
 	if !buildN {
-		gobind, err = exec.LookPath("gobind")
+		anjb, err = exec.LookPath("anjb")
 		if err != nil {
-			return errors.New("gobind was not found. Please run gomobile init before trying again")
+			return errors.New("anjb was not found. Please run anja init before trying again")
 		}
 	} else {
-		gobind = "gobind"
+		anjb = "anjb"
 	}
 
 	if len(args) == 0 {
@@ -182,14 +182,14 @@ func runBind(cmd *command) error {
 
 	switch {
 	case isAndroidPlatform(targets[0].platform):
-		return goAndroidBind(bindLibName, gobind, pkgs, targets)
+		return goAndroidBind(bindLibName, anjb, pkgs, targets)
 	case isJVMPlatform(targets[0].platform):
-		return goDesktopBind(bindLibName, gobind, pkgs, true)
+		return goDesktopBind(bindLibName, anjb, pkgs, true)
 	case isApplePlatform(targets[0].platform):
 		if !xcodeAvailable() {
 			return fmt.Errorf("-target=%q requires Xcode", buildTarget)
 		}
-		return goAppleBind(gobind, pkgs, targets)
+		return goAppleBind(anjb, pkgs, targets)
 	default:
 		return fmt.Errorf(`invalid -target=%q`, buildTarget)
 	}
@@ -318,7 +318,7 @@ func getModuleVersions(targetPlatform string, targetArch string, src string) (*m
 	}
 
 	f := &modfile.File{}
-	if err := f.AddModuleStmt("gobind"); err != nil {
+	if err := f.AddModuleStmt("anjb"); err != nil {
 		return nil, err
 	}
 	e := json.NewDecoder(bytes.NewReader(output))

@@ -4,12 +4,12 @@
 
 //go:build ignore
 
-// Gendex generates a dex file used by Go apps created with gomobile.
+// Gendex generates a dex file used by Go apps created with anja.
 //
 // The dex is a thin extension of NativeActivity, providing access to
 // a few platform features (not the SDK UI) not easily accessible from
 // NDK headers. Long term these could be made part of the standard NDK,
-// however that would limit gomobile to working with newer versions of
+// however that would limit anja to working with newer versions of
 // the Android OS, so we do this while we wait.
 //
 // Respects ANDROID_HOME to set the path of the Android SDK.
@@ -29,7 +29,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/sagernet/gomobile/internal/sdkpath"
+	"github.com/xchacha20-poly1305/anja/internal/sdkpath"
 )
 
 var outfile = flag.String("o", "", "result will be written file")

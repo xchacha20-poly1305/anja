@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sagernet/gomobile/internal/sdkpath"
+	"github.com/xchacha20-poly1305/anja/internal/sdkpath"
 )
 
 var cmdVersion = &command{
@@ -21,12 +21,12 @@ var cmdVersion = &command{
 	Usage: "",
 	Short: "print version",
 	Long: `
-Version prints versions of the gomobile binary and tools
+Version prints versions of the anja binary and tools
 `,
 }
 
 func runVersion(cmd *command) (err error) {
-	// Check this binary matches the version in github.com/sagernet/gomobile/cmd/gomobile
+	// Check this binary matches the version in github.com/xchacha20-poly1305/anja/cmd/anja
 	// source code in GOPATH. If they don't match, currently there is no
 	// way to reliably identify the revision number this binary was built
 	// against.
@@ -36,11 +36,11 @@ func runVersion(cmd *command) (err error) {
 			return "", err
 		}
 		bindir := filepath.Dir(bin)
-		cmd := exec.Command("go", "list", "-f", "{{.Stale}}", "github.com/sagernet/gomobile/cmd/gomobile")
+		cmd := exec.Command("go", "list", "-f", "{{.Stale}}", "github.com/xchacha20-poly1305/anja/cmd/anja")
 		cmd.Env = append(os.Environ(), "GOBIN="+bindir)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return "", fmt.Errorf("cannot test gomobile binary: %v, %s", err, out)
+			return "", fmt.Errorf("cannot test anja binary: %v, %s", err, out)
 		}
 		if strings.TrimSpace(string(out)) != "false" {
 			return "", fmt.Errorf("binary is out of date, re-install it")
@@ -48,7 +48,7 @@ func runVersion(cmd *command) (err error) {
 		return mobileRepoRevision()
 	}()
 	if err != nil {
-		fmt.Printf("gomobile version unknown: %v\n", err)
+		fmt.Printf("anja version unknown: %v\n", err)
 		return nil
 	}
 
@@ -60,12 +60,12 @@ func runVersion(cmd *command) (err error) {
 
 	androidapi, _ := sdkpath.AndroidAPIPath(buildAndroidAPI)
 
-	fmt.Printf("gomobile version %s (%s); androidSDK=%s\n", version, platforms, androidapi)
+	fmt.Printf("anja version %s (%s); androidSDK=%s\n", version, platforms, androidapi)
 	return nil
 }
 
 func mobileRepoRevision() (rev string, err error) {
-	b, err := exec.Command("go", "list", "-f", "{{.Dir}}", "github.com/sagernet/gomobile/app").CombinedOutput()
+	b, err := exec.Command("go", "list", "-f", "{{.Dir}}", "github.com/xchacha20-poly1305/anja/app").CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("mobile repo not found: %v, %s", err, b)
 	}

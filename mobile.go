@@ -1,3 +1,3 @@
-package gomobile
+package anja
 
 const Stub = 0

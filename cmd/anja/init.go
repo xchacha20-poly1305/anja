@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sagernet/gomobile/internal/sdkpath"
+	"github.com/xchacha20-poly1305/anja/internal/sdkpath"
 )
 
 var (
@@ -32,8 +32,8 @@ var cmdInit = &command{
 	Short: "build OpenAL for Android",
 	Long: `
 If a OpenAL source directory is specified with -openal, init will
-build an Android version of OpenAL for use with gomobile build
-and gomobile install.
+build an Android version of OpenAL for use with anja build
+and anja install.
 `,
 }
 
@@ -48,7 +48,7 @@ func runInit(cmd *command) error {
 	if len(gopaths) == 0 {
 		return fmt.Errorf("GOPATH is not set")
 	}
-	gomobilepath = filepath.Join(gopaths[0], "pkg/gomobile")
+	gomobilepath = filepath.Join(gopaths[0], "pkg/anja")
 
 	if buildX || buildN {
 		fmt.Fprintln(xout, "GOMOBILE="+gomobilepath)
@@ -79,8 +79,8 @@ func runInit(cmd *command) error {
 		removeAll(tmpdir)
 	}()
 
-	// Make sure gobind is up to date.
-	if err := goInstall([]string{"github.com/sagernet/gomobile/cmd/gobind@latest"}, nil); err != nil {
+	// Make sure anjb is up to date.
+	if err := goInstall([]string{"github.com/xchacha20-poly1305/anja/cmd/anjb@latest"}, nil); err != nil {
 		return err
 	}
 

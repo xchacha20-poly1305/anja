@@ -1,10 +1,10 @@
-# gomobile
+# anja
 
 Added JVM desktop binding support.
 
 ## New desktop/JVM packaging
 
-`gomobile bind` now supports building desktop JVM artifacts in two ways:
+`anja bind` now supports building desktop JVM artifacts in two ways:
 
 1. `-target=android -desktop`:
 also builds a desktop JAR in addition to the Android AAR.
@@ -17,19 +17,19 @@ builds only the desktop JAR (no AAR output).
 Build only desktop JAR:
 
 ```bash
-gomobile bind -target=jvm ./your/pkg
+anja bind -target=jvm ./your/pkg
 ```
 
 Set JAR output path:
 
 ```bash
-gomobile bind -target=jvm -o mylib.jar ./your/pkg
+anja bind -target=jvm -o mylib.jar ./your/pkg
 ```
 
 Build Android AAR + desktop JAR together:
 
 ```bash
-gomobile bind -target=android -desktop -o mylib.aar ./your/pkg
+anja bind -target=android -desktop -o mylib.aar ./your/pkg
 ```
 
 ### Desktop target selection
@@ -45,7 +45,7 @@ Default:
 Example:
 
 ```bash
-gomobile bind -target=jvm \
+anja bind -target=jvm \
   -desktoptargets host,linux/amd64,darwin/arm64,windows/amd64 \
   -jniinclude /path/to/jni-headers \
   -desktopo mylib-desktop.jar \
@@ -72,7 +72,7 @@ Directory layout:
 Example:
 
 ```bash
-gomobile bind -target=jvm \
+anja bind -target=jvm \
   -jniinclude /path/to/jni-headers \
   ./your/pkg
 ```
@@ -99,5 +99,5 @@ Supported desktop arches by platform:
 ## Notes
 
 - Desktop builds require a full JDK (JNI headers), usually via `JAVA_HOME`.
-- Use `-jniinclude` to point desktop builds at a custom JNI headers directory. `gomobile` checks `<root>/<os>/` first and falls back to the existing `JAVA_HOME` detection when the platform headers are not present.
+- Use `-jniinclude` to point desktop builds at a custom JNI headers directory. `anja` checks `<root>/<os>/` first and falls back to the existing `JAVA_HOME` detection when the platform headers are not present.
 - Cross-platform desktop builds require matching C cross-compilers/toolchains installed.
