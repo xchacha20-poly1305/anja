@@ -1,4 +1,4 @@
-module github.com/sagernet/gomobile
+module github.com/xchacha20-poly1305/anja
 
 go 1.23.0
 

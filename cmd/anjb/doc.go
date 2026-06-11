@@ -3,26 +3,26 @@
 // license that can be found in the LICENSE file.
 
 /*
-Gobind generates language bindings that make it possible to call Go
+Anjb generates language bindings that make it possible to call Go
 functions from Java and Objective-C.
 
-Typically gobind is not used directly. Instead, a binding is
+Typically anjb is not used directly. Instead, a binding is
 generated and automatically packaged for Android or iOS by
-`gomobile bind`. For more details on installing and using the gomobile
-tool, see https://github.com/sagernet/gomobile/cmd/gomobile.
+`anja bind`. For more details on installing and using the anja
+tool, see https://github.com/xchacha20-poly1305/anja/cmd/anja.
 
 # Binding Go
 
-Gobind generates target language (Java or Objective-C) bindings for
+Anjb generates target language (Java or Objective-C) bindings for
 each exported symbol in a Go package. The Go package you choose to
 bind defines a cross-language interface.
 
-Bindings require additional Go code be generated, so using gobind
+Bindings require additional Go code be generated, so using anjb
 manually requires calling it twice, first with -lang=<target>, where
 target is either java or objc, and again with -lang=go. The generated
 package can then be _ imported into a Go program, typically built
 with -buildmode=c-archive for iOS or -buildmode=c-shared for Android.
-These details are handled by the `gomobile bind` command.
+These details are handled by the `anja bind` command.
 
 # Passing Go objects to target languages
 
@@ -99,7 +99,7 @@ For a Go interface:
 		p.Print("Hello, World!")
 	}
 
-gobind generates a Java interface that can be used to implement a Printer:
+anjb generates a Java interface that can be used to implement a Printer:
 
 	public abstract class Myfmt {
 		public static void printHello(Printer p0);
@@ -125,7 +125,7 @@ The Java implementation can be used like so:
 	Printer printer = new SysPrint();
 	Myfmt.printHello(printer);
 
-For Objective-C binding, gobind generates a protocol that declares
+For Objective-C binding, anjb generates a protocol that declares
 methods corresponding to Go interface's methods.
 
 	@protocol GoMyfmtPrinter
@@ -190,8 +190,8 @@ boundary, the program will exit.
 
 # Reverse bindings
 
-Gobind also supports accessing API from Java or Objective C from Go.
-Similar to how Cgo supports the magic "C" import, gobind recognizes
+Anjb also supports accessing API from Java or Objective C from Go.
+Similar to how Cgo supports the magic "C" import, anjb recognizes
 import statements that start with "Java/" or "ObjC/". For example,
 to import java.lang.System and call the static method currentTimeMillis:
 
@@ -205,7 +205,7 @@ Similarly, to import NSDate and call the static method [NSDate date]:
 
 	d := NSDate.Date()
 
-Gobind also supports specifying particular classes, interfaces or
+Anjb also supports specifying particular classes, interfaces or
 protocols a particular Go struct should extend or implement. For example,
 to create an Android Activity subclass MainActivity:
 
@@ -215,7 +215,7 @@ to create an Android Activity subclass MainActivity:
 		app.Activity
 	}
 
-Gobind also recognizes Java interfaces as well as Objective C classes and
+Anjb also recognizes Java interfaces as well as Objective C classes and
 protocols the same way.
 
 For more details on binding the native API, see the design proposals,
@@ -245,8 +245,8 @@ interface in Java, do not store an instance of Seq.Object inside it.
 
 # Further reading
 
-Examples can be found in http://github.com/sagernet/gomobile/example.
+Examples can be found in http://github.com/xchacha20-poly1305/anja/example.
 
-Design doc: http://golang.org/s/gobind
+Design doc: http://golang.org/s/anjb
 */
-package main // import "github.com/sagernet/gomobile/cmd/gobind"
+package main // import "github.com/xchacha20-poly1305/anja/cmd/anjb"

@@ -18,7 +18,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sagernet/gomobile/internal/sdkpath"
+	"github.com/xchacha20-poly1305/anja/internal/sdkpath"
 	"golang.org/x/tools/go/packages"
 )
 
@@ -44,7 +44,7 @@ instruction sets (arm, 386, amd64, arm64). A subset of instruction sets can
 be selected by specifying target type with the architecture name. E.g.
 -target=android/arm,android/386.
 
-For Apple -target platforms, gomobile must be run on an OS X machine with
+For Apple -target platforms, anja must be run on an OS X machine with
 Xcode installed.
 
 By default, -target ios will generate an XCFramework for both ios
@@ -171,8 +171,8 @@ func runBuildImpl(cmd *command) (*packages.Package, error) {
 		return nil, fmt.Errorf(`invalid -target=%q`, buildTarget)
 	}
 
-	if !nmpkgs["github.com/sagernet/gomobile/app"] {
-		return nil, fmt.Errorf(`%s does not import "github.com/sagernet/gomobile/app"`, pkg.PkgPath)
+	if !nmpkgs["github.com/xchacha20-poly1305/anja/app"] {
+		return nil, fmt.Errorf(`%s does not import "github.com/xchacha20-poly1305/anja/app"`, pkg.PkgPath)
 	}
 
 	return pkg, nil
@@ -182,7 +182,7 @@ var nmRE = regexp.MustCompile(`[0-9a-f]{8} t _?(?:.*/vendor/)?(golang.org/x.*/[^
 
 func extractPkgs(nm string, path string) (map[string]bool, error) {
 	if buildN {
-		return map[string]bool{"github.com/sagernet/gomobile/app": true}, nil
+		return map[string]bool{"github.com/xchacha20-poly1305/anja/app": true}, nil
 	}
 	r, w := io.Pipe()
 	cmd := exec.Command(nm, path)
@@ -373,7 +373,7 @@ func goModTidyAt(at string, env []string) error {
 // goCommandEnv returns an environment for go subprocesses.
 //
 // Specify GOMODCACHE explicitly. The default cache path is GOPATH[0]/pkg/mod,
-// but gomobile prepends generated GOPATH entries, which otherwise creates a
+// but anja prepends generated GOPATH entries, which otherwise creates a
 // cold module cache under the temporary work tree.
 func goCommandEnv(env []string, extra ...string) []string {
 	merged := append([]string{}, env...)

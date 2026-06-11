@@ -38,7 +38,7 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/sagernet/gomobile/internal/mobileinit"
+	"github.com/xchacha20-poly1305/anja/internal/mobileinit"
 )
 
 var assetOnce sync.Once

@@ -108,7 +108,7 @@ func parseDesktopTargets(spec string) ([]desktopTarget, error) {
 	return targets, nil
 }
 
-func goDesktopBind(libName string, gobind string, pkgs []*packages.Package, jvmOnly bool) error {
+func goDesktopBind(libName string, anjb string, pkgs []*packages.Package, jvmOnly bool) error {
 	targets, err := parseDesktopTargets(bindDesktopTargets)
 	if err != nil {
 		return fmt.Errorf("invalid -desktoptargets=%q: %v", bindDesktopTargets, err)
@@ -118,7 +118,7 @@ func goDesktopBind(libName string, gobind string, pkgs []*packages.Package, jvmO
 	nativeLibs := map[desktopTarget]string{}
 	for _, target := range targets {
 		outDir := filepath.Join(tmpdir, "desktop", strings.ReplaceAll(target.String(), "/", "_"))
-		if err := runDesktopGobind(gobind, libName, pkgs, target, outDir); err != nil {
+		if err := runDesktopGobind(anjb, libName, pkgs, target, outDir); err != nil {
 			return fmt.Errorf("failed to generate desktop bindings for %s: %w", target, err)
 		}
 		if javaSrcDir == "" {
@@ -135,9 +135,9 @@ func goDesktopBind(libName string, gobind string, pkgs []*packages.Package, jvmO
 	return buildDesktopJar(javaSrcDir, nativeLibs, pkgs, jvmOnly)
 }
 
-func runDesktopGobind(gobind string, libName string, pkgs []*packages.Package, target desktopTarget, outDir string) error {
+func runDesktopGobind(anjb string, libName string, pkgs []*packages.Package, target desktopTarget, outDir string) error {
 	cmd := exec.Command(
-		gobind,
+		anjb,
 		"-lang=go,java",
 		"-javaruntime=jvm",
 		"-outdir="+outDir,
@@ -190,7 +190,7 @@ func buildDesktopSO(libName string, target desktopTarget, outDir string, outPath
 		return err
 	}
 
-	srcDir := filepath.Join(outDir, "src", "gobind")
+	srcDir := filepath.Join(outDir, "src", "anjb")
 	if modulesUsed {
 		newSrcDir, _ := filepath.Abs(filepath.Join(".", "build", target.goos+"_"+target.goarch, "lib"+libName))
 		if err := os.MkdirAll(newSrcDir, 0755); err != nil {

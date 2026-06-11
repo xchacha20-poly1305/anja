@@ -64,7 +64,7 @@ public class Seq {
 			if (in == null) {
 				return false;
 			}
-			Path lib = Files.createTempFile("gomobile-", "-" + mapped);
+			Path lib = Files.createTempFile("anja-", "-" + mapped);
 			lib.toFile().deleteOnExit();
 			Files.copy(in, lib, StandardCopyOption.REPLACE_EXISTING);
 			System.load(lib.toAbsolutePath().toString());

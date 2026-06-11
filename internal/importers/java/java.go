@@ -21,7 +21,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/sagernet/gomobile/internal/importers"
+	"github.com/xchacha20-poly1305/anja/internal/importers"
 )
 
 // Class is the bind representation of a Java class or
@@ -630,7 +630,7 @@ func (j *Importer) importClasses(names []string, allowMissingClasses bool) ([]*C
 				return nil, err
 			}
 			// The Android Databinding library generates android.databinding.DataBindingComponent
-			// too late in the build process for the gobind plugin to import it. Synthesize a class
+			// too late in the build process for the anjb plugin to import it. Synthesize a class
 			// for it instead.
 			cls = &Class{
 				Name:      name,
