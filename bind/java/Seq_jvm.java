@@ -11,6 +11,7 @@ import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,6 +59,15 @@ public class Seq {
 		String mapped = System.mapLibraryName(name);
 		if (os.equals("darwin") && mapped.endsWith(".jnilib")) {
 			mapped = "lib" + name + ".dylib";
+		}
+		// An explicit directory beats the bundled copy, so a packaged app can
+		// ship the library as a plain file (shared with other processes) and
+		// keep it out of the jar. A configured override must not fall back:
+		// silently loading a different library would hide deployment bugs.
+		String nativesDir = System.getProperty("anja.natives.dir");
+		if (nativesDir != null && !nativesDir.isEmpty()) {
+			System.load(Paths.get(nativesDir, mapped).toAbsolutePath().toString());
+			return true;
 		}
 		String resource = "/natives/" + os + "-" + arch + "/" + mapped;
 		try (InputStream in = Seq.class.getResourceAsStream(resource)) {
