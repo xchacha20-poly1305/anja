@@ -6,6 +6,7 @@ package main
 
 import (
 	"archive/zip"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -83,23 +84,19 @@ func goAndroidBind(libName string, anjb string, pkgs []*packages.Package, target
 	return nil
 }
 
-func buildSrcJar(src string) error {
-	var out io.Writer = ioutil.Discard
-	if !buildN {
-		ext := filepath.Ext(buildO)
-		f, err := os.Create(buildO[:len(buildO)-len(ext)] + "-sources.jar")
-		if err != nil {
-			return err
-		}
-		defer func() {
-			if cerr := f.Close(); err == nil {
-				err = cerr
-			}
-		}()
-		out = f
+func buildSrcJar(src string) (retErr error) {
+	if buildN {
+		return writeJar(io.Discard, src)
 	}
-
-	return writeJar(out, src)
+	ext := filepath.Ext(buildO)
+	f, err := os.Create(buildO[:len(buildO)-len(ext)] + "-sources.jar")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		retErr = errors.Join(retErr, f.Close())
+	}()
+	return writeJar(f, src)
 }
 
 // AAR is the format for the binary distribution of an Android Library Project
@@ -120,7 +117,7 @@ func buildSrcJar(src string) error {
 //	aidl (optional, not relevant)
 //
 // javac and jar commands are needed to build classes.jar.
-func buildAAR(libName string, srcDir, androidDir string, pkgs []*packages.Package, targets []targetInfo) (err error) {
+func buildAAR(libName string, srcDir, androidDir string, pkgs []*packages.Package, targets []targetInfo) (retErr error) {
 	var out io.Writer = ioutil.Discard
 	if buildO == "" {
 		buildO = pkgs[0].Name + ".aar"
@@ -134,9 +131,7 @@ func buildAAR(libName string, srcDir, androidDir string, pkgs []*packages.Packag
 			return err
 		}
 		defer func() {
-			if cerr := f.Close(); err == nil {
-				err = cerr
-			}
+			retErr = errors.Join(retErr, f.Close())
 		}()
 		out = f
 	}
