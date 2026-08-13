@@ -204,6 +204,7 @@ var (
 	bindDesktop        bool   // -desktop
 	bindDesktopTargets string // -desktoptargets
 	bindDesktopO       string // -desktopo
+	bindNativesOut     string // -nativesout
 	bindJNIInclude     string // -jniinclude
 )
 
@@ -219,6 +220,7 @@ func init() {
 	cmdBind.flag.BoolVar(&bindDesktop, "desktop", false, "Also build a desktop JAR with Java classes and native shared libraries. Valid only with -target=android.")
 	cmdBind.flag.StringVar(&bindDesktopTargets, "desktoptargets", "host", "Comma-delimited desktop targets. Values: host, linux[/arch], darwin[/arch], windows[/arch].")
 	cmdBind.flag.StringVar(&bindDesktopO, "desktopo", "", "Output path for the desktop JAR.")
+	cmdBind.flag.StringVar(&bindNativesOut, "nativesout", "", "Directory to also write the built desktop shared libraries to, as <dir>/<goos>-<goarch>/<library>. The JAR still embeds them; a plain copy can be loaded at run time via the anja.natives.dir system property. Valid only with -target=jvm or -desktop.")
 	cmdBind.flag.StringVar(&bindJNIInclude, "jniinclude", "", "Custom desktop JNI directory root. Checks <dir>/<os>/ for JNI headers before falling back to JAVA_HOME detection.")
 }
 

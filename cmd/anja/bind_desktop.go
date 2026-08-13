@@ -129,10 +129,29 @@ func goDesktopBind(libName string, anjb string, pkgs []*packages.Package, jvmOnl
 		if err := buildDesktopSO(libName, target, outDir, libPath); err != nil {
 			return fmt.Errorf("failed to build desktop shared library for %s: %w", target, err)
 		}
+		if err := exportDesktopNative(libPath, target); err != nil {
+			return err
+		}
 		nativeLibs[target] = libPath
 	}
 
 	return buildDesktopJar(javaSrcDir, nativeLibs, pkgs, jvmOnly)
+}
+
+// exportDesktopNative copies a built desktop shared library into the
+// -nativesout directory, mirroring the JAR's natives/<goos>-<goarch>/
+// layout. Packagers can then ship the library as a plain file — loaded by
+// the JVM via the anja.natives.dir system property, or by any other host
+// process — without unpacking the JAR.
+func exportDesktopNative(libPath string, target desktopTarget) error {
+	if bindNativesOut == "" {
+		return nil
+	}
+	dst := filepath.Join(bindNativesOut, target.jarSubdir(), filepath.Base(libPath))
+	if err := copyFile(dst, libPath); err != nil {
+		return fmt.Errorf("failed to export desktop shared library for %s: %w", target, err)
+	}
+	return nil
 }
 
 func runDesktopGobind(anjb string, libName string, pkgs []*packages.Package, target desktopTarget, outDir string) error {

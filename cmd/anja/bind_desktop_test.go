@@ -145,3 +145,43 @@ func writeFileForTest(t *testing.T, path string) {
 		t.Fatalf("WriteFile(%q) returned error: %v", path, err)
 	}
 }
+
+func TestExportDesktopNativeCopiesIntoTargetSubdir(t *testing.T) {
+	prev := bindNativesOut
+	t.Cleanup(func() {
+		bindNativesOut = prev
+	})
+	outDir := t.TempDir()
+	bindNativesOut = outDir
+
+	src := filepath.Join(t.TempDir(), "libgojni.so")
+	if err := os.WriteFile(src, []byte("native payload"), 0o644); err != nil {
+		t.Fatalf("failed to write source library: %v", err)
+	}
+
+	target := desktopTarget{goos: "linux", goarch: "amd64"}
+	if err := exportDesktopNative(src, target); err != nil {
+		t.Fatalf("exportDesktopNative returned error: %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(outDir, "linux-amd64", "libgojni.so"))
+	if err != nil {
+		t.Fatalf("exported library missing: %v", err)
+	}
+	if string(got) != "native payload" {
+		t.Fatalf("exported library content = %q, want %q", got, "native payload")
+	}
+}
+
+func TestExportDesktopNativeNoopWithoutFlag(t *testing.T) {
+	prev := bindNativesOut
+	t.Cleanup(func() {
+		bindNativesOut = prev
+	})
+	bindNativesOut = ""
+
+	missing := filepath.Join(t.TempDir(), "does-not-exist.so")
+	if err := exportDesktopNative(missing, desktopTarget{goos: "linux", goarch: "amd64"}); err != nil {
+		t.Fatalf("exportDesktopNative without -nativesout should be a no-op, got: %v", err)
+	}
+}
