@@ -50,6 +50,9 @@ func goAndroidBind(libName string, anjb string, pkgs []*packages.Package, target
 	if libName != "" {
 		cmd.Args = append(cmd.Args, "-libname="+libName)
 	}
+	if bindLinkOnly != "" {
+		cmd.Args = append(cmd.Args, "-linkonly="+bindLinkOnly)
+	}
 	for _, p := range pkgs {
 		cmd.Args = append(cmd.Args, p.PkgPath)
 	}

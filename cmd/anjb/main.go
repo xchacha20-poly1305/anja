@@ -33,6 +33,7 @@ var (
 	bootclasspath = flag.String("bootclasspath", "", "Java bootstrap classpath.")
 	classpath     = flag.String("classpath", "", "Java classpath.")
 	tags          = flag.String("tags", "", "build tags.")
+	linkonly      = flag.String("linkonly", "", "comma-separated Go package import paths to blank-import into the generated Go main package without binding them. Useful for packages that only contribute cgo //export symbols or init side effects. Valid only when Go bindings are generated.")
 )
 
 var usage = `The Anjb tool generates Java language bindings for Go.
@@ -164,6 +165,11 @@ func run() {
 		}
 		// Generate the error package and support files
 		genPkg(l, nil, nil, typePkgs, classes, otypes, *libname)
+		if l == "go" {
+			if paths := splitLinkOnlyPackages(*linkonly); len(paths) > 0 {
+				genLinkOnlyPkg(paths)
+			}
+		}
 	}
 }
 

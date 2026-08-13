@@ -179,6 +179,9 @@ func runDesktopGobind(anjb string, libName string, pkgs []*packages.Package, tar
 	if libName != "" {
 		cmd.Args = append(cmd.Args, "-libname="+libName)
 	}
+	if bindLinkOnly != "" {
+		cmd.Args = append(cmd.Args, "-linkonly="+bindLinkOnly)
+	}
 	for _, p := range pkgs {
 		cmd.Args = append(cmd.Args, p.PkgPath)
 	}

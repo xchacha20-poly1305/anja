@@ -206,6 +206,7 @@ var (
 	bindDesktopO       string // -desktopo
 	bindNativesOut     string // -nativesout
 	bindJNIInclude     string // -jniinclude
+	bindLinkOnly       string // -linkonly
 )
 
 func init() {
@@ -222,6 +223,7 @@ func init() {
 	cmdBind.flag.StringVar(&bindDesktopO, "desktopo", "", "Output path for the desktop JAR.")
 	cmdBind.flag.StringVar(&bindNativesOut, "nativesout", "", "Directory to also write the built desktop shared libraries to, as <dir>/<goos>-<goarch>/<library>. The JAR still embeds them; a plain copy can be loaded at run time via the anja.natives.dir system property. Valid only with -target=jvm or -desktop.")
 	cmdBind.flag.StringVar(&bindJNIInclude, "jniinclude", "", "Custom desktop JNI directory root. Checks <dir>/<os>/ for JNI headers before falling back to JAVA_HOME detection.")
+	cmdBind.flag.StringVar(&bindLinkOnly, "linkonly", "", "Comma-separated Go package import paths to link into the generated library via blank imports, without generating bindings. For packages that only contribute cgo //export symbols or init side effects. Valid with -target=android or -target=jvm.")
 }
 
 func bootClasspath() (string, error) {
